@@ -233,5 +233,30 @@ public class FinishActivity extends BaseSetupWizardActivity {
     private void finishAfterAnimation() {
         SetupWizardUtils.finishSetupWizard(FinishActivity.this);
         sFinishState = FinishState.FINISHED;
+        startLiveInstaller();
+    }
+
+    /**
+     * LOS TV: on live ISO sessions the setup wizard hands off straight
+     * to the native installer instead of an empty desktop. Installed
+     * systems (no ro.boot.live) are untouched.
+     */
+    private void startLiveInstaller() {
+        try {
+            if (!"true".equals(
+                    android.os.SystemProperties.get("ro.boot.live"))) {
+                return;
+            }
+            android.content.Intent i = new android.content.Intent();
+            i.setClassName("org.los.tv.installer",
+                    "org.los.tv.installer.MainActivity");
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (i.resolveActivity(getPackageManager()) != null) {
+                startActivity(i);
+                Log.i(TAG, "live installer started");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "live installer not started: " + e);
+        }
     }
 }
